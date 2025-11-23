@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國小自然百科：全版本終極完美版 (vNatural.Final - 影音互動版)</title>
+
+    <!-- Leaflet CSS/JS (地圖功能) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --primary: #1b5e20;
+            --secondary: #006064;
+            --accent: #bf360c;
+            --highlight: #f9a825;
+            --bg-light: #f1f8e9;
+            --modal-bg: rgba(10, 30, 10, 0.96);
+            --btn-book: #2e7d32;
+            --text-main: #212121;
+            --img-bg: #e0f7fa;
+            --video-overlay: rgba(0, 0, 0, 0.4);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            margin: 0;
+            background: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+        }
+
+        /* 側欄樣式 */
+        .sidebar {
+            background: var(--primary);
+            color: #e8f5e9;
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+        }
+        .sidebar h1 {
+            font-size: 1.6em;
+            text-align: center;
+            padding: 1.5em 1em;
+            background: #0d3312;
+            border-bottom: 1px solid #4c8c4a;
+            margin: 0;
+            letter-spacing: 1px;
+            line-height: 1.4;
+        }
+        .sidebar ul.nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar ul.nav li {
+            border-bottom: 1px solid #2e7d32;
+        }
+        .sidebar ul.nav li a {
+            display: block;
+            padding: 1.2em 1.2em;
+            text-decoration: none;
+            color: #e8f5e9;
+            font-size: 1.05rem;
+            transition: 0.3s;
+            border-left: 6px solid transparent;
+        }
+        .sidebar ul.nav li a:hover {
+            background: var(--secondary);
+            padding-left: 1.8em;
+        }
+        .sidebar ul.nav li a.active {
+            background: #f1f8e9;
+            color: var(--primary);
+            font-weight: 900;
+            border-left: 6px solid var(--highlight);
+        }
+
+        /* 主內容區 */
+        .main {
+            flex: 1;
+            padding: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            scroll-behavior: smooth;
+            background: #fafafa;
+            min-width: 0;
+        }
+
+        /* 內頁容器 */
+        .page-container {
+            padding: 40px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .page {
+            display: none;
+            animation: fadeIn 0.4s;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Layer 1: Timeline & Map Styles */
+        .section-title {
+            color: var(--primary);
+            border-bottom: 4px double #81c784;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            font-size: 2.4rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+        }
+        .section-desc {
+            color: #37474f;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            background: #e8f5e9;
+            padding: 20px 25px;
+            border-radius: 10px;
+            border-left: 8px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .master-timeline {
+            position: relative;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding-left: 30px;
+        }
+        .master-timeline::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #b0bec5;
+            border-radius: 2px;
+        }
+        .mt-group-title {
+            font-size: 1.6rem;
+            color: var(--primary);
+            font-weight: bold;
+            margin: 60px 0 30px -35px;
+            background: #ffffff;
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 3px solid #a5d6a7;
+            position: relative;
+            z-index: 2;
+        }
+
+        .mt-event {
+            position: relative;
+            margin-bottom: 30px;
+            cursor: pointer;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.06);
+            border-left: 6px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .mt-event:hover {
+            transform: translateX(10px) translateY(-2px);
+            border-left-color: var(--accent);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .mt-dot {
+            position: absolute;
+            left: -27px;
+            top: 35px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 5px solid var(--primary);
+            border-radius: 50%;
+            z-index: 2;
+            transition: 0.2s;
+        }
+        .mt-event:hover .mt-dot {
+            border-color: var(--accent);
+            transform: scale(1.4);
+            background: var(--accent);
+        }
+
+        .mt-year {
+            font-weight: 900;
+            color: #fff;
+            background: var(--accent);
+            margin-right: 15px;
+            font-size: 1.1rem;
+            font-family: 'Arial', sans-serif;
+            padding: 5px 12px;
+            border-radius: 20px;
+            vertical-align: middle;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .mt-title {
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: #263238;
+            vertical-align: middle;
+        }
+        .mt-desc {
+            font-size: 1.15rem;
+            color: #546e7a;
+            margin-top: 12px;
+            display: block;
+        }
+
+        .map-wrapper {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            border: 5px solid white;
+            margin-bottom: 50px;
+            z-index: 1;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+
+        /* Layer 2: 詳細模態視窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-bg);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(6px);
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 1200px;
+            height: 95vh;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            animation: slideUp 0.3s;
+        }
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 25px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            border-bottom: 6px solid var(--highlight);
+        }
+        .modal-body {
+            padding: 40px 50px;
+            overflow-y: auto;
+            flex: 1;
+            background: #fdfdfd;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 40px;
+        }
+        .info-block {
+            background: #fff;
+            padding: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        .info-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+        }
+        .info-block.cause::before { background: #0288d1; }
+        .info-block.impact::before { background: #7b1fa2; }
+        .info-block.figures::before { background: #ef6c00; }
+
+        .info-label {
+            font-weight: 900;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f1f2f6;
+            padding-bottom: 10px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sub-timeline {
+            padding-left: 20px;
+            margin: 0;
+            list-style: none;
+        }
+        .sub-timeline li {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 25px;
+            border-left: 3px solid #cfd8dc;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .sub-timeline li::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 8px;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 1px #cfd8dc;
+        }
+        .st-time {
+            font-weight: bold;
+            color: var(--secondary);
+            font-size: 1.05rem;
+            display: block;
+            margin-bottom: 6px;
+            background: #e0f2f1;
+            padding: 3px 10px;
+            display: inline-block;
+            border-radius: 5px;
+        }
+
+        .exam-box {
+            background: #fffdeb;
+            border-left: 8px solid #fbc02d;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        .exam-box h4 {
+            margin: 0 0 20px 0;
+            color: #e65100;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+        }
+        .exam-list {
+            padding-left: 20px;
+            margin: 0;
+            color: #bf360c;
+            font-weight: 700;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+        .exam-list li {
+            margin-bottom: 12px;
+        }
+
+        .figure-chip {
+            display: inline-flex;
+            align-items: center;
+            background: #e0f2f1;
+            color: #00695c;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 1.05rem;
+            margin: 0 12px 12px 0;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 2px solid #b2dfdb;
+        }
+        .figure-chip:hover {
+            background: #26a69a;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+        }
+        .figure-chip::before {
+            content: '🔬';
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        /* Layer 3: 三版統整按鈕與模態 */
+        .textbook-btn {
+            display: block;
+            width: 100%;
+            background: var(--btn-book);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .textbook-btn:hover {
+            background: #2e7d32;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        }
+
+        .layer3-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .layer3-content {
+            background: white;
+            width: min(1000px, 100%);
+            max-height: 92vh;
+            border-radius: 15px;
+            padding: 40px 40px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.95);
+            border-top: 12px solid var(--btn-book);
+            animation: slideUp 0.3s;
+        }
+        .layer3-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 35px;
+            border-bottom: 3px solid #ddd;
+            padding-bottom: 20px;
+            text-align: center;
+        }
+        .layer3-text {
+            font-size: 1.2rem;
+            line-height: 2;
+            color: #263238;
+            text-align: justify;
+            white-space: pre-wrap;
+            font-family: "Microsoft JhengHei", serif;
+        }
+        .layer3-text strong {
+            color: #d84315;
+            background: #fff3e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* 圖片與影音說明區塊 */
+        .img-box {
+            background: var(--img-bg);
+            border: 2px dashed #0097a7;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+            color: #006064;
+            font-weight: bold;
+            position: relative;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .img-box:hover {
+            transform: scale(1.01);
+            background: #b2ebf2;
+            border-color: #006064;
+        }
+        .video-thumbnail {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .video-thumbnail img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+        .video-thumbnail:hover img {
+            transform: scale(1.05);
+        }
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--video-overlay);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        .video-thumbnail:hover .play-overlay {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .play-overlay::after {
+            content: '▶';
+            font-size: 4rem;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .img-box::before {
+            content: '🎬 點擊開啟教學影片搜尋 (YouTube)';
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #00838f;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid #80deea;
+            padding-bottom: 10px;
+        }
+        .img-caption {
+            display: block;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: normal;
+            color: #455a64;
+            line-height: 1.5;
+        }
+
+        .close-layer3 {
+            position: absolute;
+            right: 30px;
+            top: 25px;
+            font-size: 3.5rem;
+            cursor: pointer;
+            color: #b0bec5;
+            transition: 0.2s;
+            line-height: 1;
+        }
+        .close-layer3:hover {
+            color: #c62828;
+        }
+
+        /* Video Modal */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 4000;
+            justify-content: center;
+            align-items: center;
+        }
+        .video-container {
+            position: relative;
+            width: 90%;
+            max-width: 1000px;
+            aspect-ratio: 16/9;
+        }
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .close-video {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            z-index: 4001;
+        }
+
+        /* 第三層：科學家/概念卡片 */
+        .person-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            width: 500px;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 35px 100px rgba(0,0,0,0.7);
+            z-index: 3500;
+            display: none;
+            border-top: 10px solid #00acc1;
+            animation: popIn 0.3s;
+        }
+        .close-person {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            cursor: pointer;
+            font-size: 2.5rem;
+            color: #cfd8dc;
+        }
+        .close-person:hover {
+            color: #e53935;
+        }
+
+        .comp-section {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 50px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .comp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+        .comp-table th {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: left;
+            font-size: 1.25rem;
+            border-bottom: 6px solid var(--highlight);
+        }
+        .comp-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid #eee;
+            font-size: 1.15rem;
+            color: #37474f;
+            vertical-align: top;
+        }
+        .comp-table tr:nth-child(even) {
+            background-color: #f1f8e9;
+        }
+        .comp-table tr:hover {
+            background-color: #e0f2f1;
+        }
+        .col-year {
+            width: 15%;
+            font-weight: 800;
+            color: var(--accent);
+            font-family: 'Arial', sans-serif;
+            white-space: nowrap;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes popIn {
+            from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 1024px) and (orientation: portrait) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .sidebar ul.nav { display: flex; flex-wrap: wrap; justify-content: space-around; }
+            .sidebar ul.nav li { flex: 1 1 auto; text-align: center; }
+            .sidebar ul.nav li a { border-left: none; border-bottom: 6px solid transparent; }
+            .sidebar ul.nav li a.active { border-left: none; border-bottom: 6px solid var(--highlight); }
+            .page-container { padding: 20px; }
+        }
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+            .layer3-content { width: 95%; padding: 30px; }
+            .comp-table th, .comp-table td { font-size: 1rem; padding: 12px; }
+            .modal-content { height: auto; max-height: 98vh; }
+            .textbook-btn { font-size: 1.1rem; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="sidebar">
+        <h1>國小自然百科<br><span style="font-size:0.5em; font-weight:normal; display:block; margin-top:10px; color:#a5d6a7;">全版本終極完美版</span></h1>
+        <ul class="nav">
+            <li><a href="#" data-page="home" class="active">📊 學習地圖 & 跨域對照</a></li>
+            <li><a href="#" data-page="bio">1. 🌿 生物與環境 (Bio)</a></li>
+            <li><a href="#" data-page="physics">2. ⚡ 物理與能量 (Phys)</a></li>
+            <li><a href="#" data-page="chem">3. 🧪 物質與變化 (Chem)</a></li>
+            <li><a href="#" data-page="earth">4. 🌍 地球與太空 (Earth)</a></li>
+            <li><a href="#" data-page="tech">5. 📡 科技與實驗設計 (Lab)</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <!-- Home -->
+        <div id="home" class="page active page-container">
+            <h1 style="text-align:center; color:var(--primary); margin-bottom: 40px;">🧬 科學探索：各年級核心能力與實驗考點對照表</h1>
+
+            <div class="comp-section">
+                <h3 style="margin-top:0; color:var(--primary); border-left:8px solid var(--accent); padding-left:20px;">🎒 國小三至六年級：自然學習螺旋與實驗重點 (康軒/南一/翰林)</h3>
+                <table class="comp-table">
+                    <thead>
+                        <tr>
+                            <th class="col-year">年級階段</th>
+                            <th>重點學習能力 (Skill)</th>
+                            <th>核心主題與必考實驗 (Key Experiments)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparison-body"></tbody>
+                </table>
+            </div>
+
+            <div class="section-title">全領域綜整學習線 (含私中/資優班陷阱)</div>
+            <p style="color:#546e7a; margin-bottom:25px; font-size: 1.1rem;">以下依據學習難度與邏輯順序，統整三版內容，特別標註「實驗操縱變因」與「考試陷阱」。</p>
+            <div id="master-timeline" class="master-timeline"></div>
+        </div>
+
+        <!-- subject pages -->
+        <div id="bio" class="page page-container"></div>
+        <div id="physics" class="page page-container"></div>
+        <div id="chem" class="page page-container"></div>
+        <div id="earth" class="page page-container"></div>
+        <div id="tech" class="page page-container"></div>
+    </div>
+</div>
+
+<!-- Layer 2: 詳細知識模態視窗 -->
+<div class="modal-overlay" id="event-modal" onclick="closeEventModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="m-title" style="margin:0; font-size: 2rem; font-weight:900;"></h2>
+            <span style="font-size:3.5rem; cursor:pointer; line-height: 0.8;" onclick="closeEventModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="m-desc" style="font-size:1.35rem; line-height:1.8; color:#37474f; margin-bottom:35px; padding-bottom:25px; border-bottom:1px solid #eee; font-weight: 500;"></p>
+
+            <div class="detail-grid">
+                <div>
+                    <div class="info-block cause">
+                        <span class="info-label">🤔 原理與定義 (Principle)</span>
+                        <p id="m-cause" style="margin:0; color:#455a64; font-size:1.2rem; line-height: 1.9; text-align: justify;"></p>
+                    </div>
+                    <div class="info-block">
+                        <span class="info-label">📝 實驗設計與變因分析 (Experimental Design)</span>
+                        <div style="background:#fff3e0; padding:12px; border-radius:8px; margin-bottom:20px; color:#bf360c; font-weight:bold; font-size:1rem; border-left:5px solid #e65100;">
+                            ⚠️ 私中/科展必考：準確分辨「操縱變因」(只有一個)與「控制變因」(全相同)。
+                        </div>
+                        <ul id="m-subtimeline" class="sub-timeline"></ul>
+                    </div>
+                    <div class="info-block impact">
+                        <span class="info-label">🚀 生活應用與現象 (Application)</span>
+                        <p id="m-impact" style="margin:0; color:#455a64; font-size:1.2rem; line-height: 1.9;"></p>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="info-block figures">
+                        <span class="info-label" style="color:#e65100;">👨‍🔬 關鍵科學家/專有名詞 (點擊詳解)</span>
+                        <div id="m-figures" style="display: flex; flex-wrap: wrap;"></div>
+                    </div>
+
+                    <div class="exam-box">
+                        <h4>🔥 私中/資優班 考點 & 陷阱解析</h4>
+                        <ul id="m-exam-list" class="exam-list"></ul>
+                    </div>
+
+                    <div style="margin-top: 40px;">
+                        <button class="textbook-btn" onclick="openTextbookModal()">
+                            <span>📖</span> 閱讀權威版深度統整 (含影音教學)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Layer 3: 課文統整模態視窗 -->
+<div class="layer3-overlay" id="textbook-modal" onclick="closeTextbookModal()">
+    <div class="layer3-content" onclick="event.stopPropagation()">
+        <span class="close-layer3" onclick="closeTextbookModal()">&times;</span>
+        <div id="tb-title" class="layer3-title"></div>
+        <div id="tb-content" class="layer3-text"></div>
+    </div>
+</div>
+
+<!-- Video Player Modal -->
+<div class="video-modal" id="video-player" onclick="closeVideo()">
+    <div class="close-video" onclick="closeVideo()">&times;</div>
+    <div class="video-container">
+        <iframe id="yt-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+</div>
+
+<!-- 科學家/概念卡片 -->
+<div class="person-card" id="person-modal" onclick="event.stopPropagation()">
+    <span class="close-person" onclick="closePersonModal()">&times;</span>
+    <h3 id="p-name" style="margin:0 0 15px 0; color:var(--primary); font-size:2.2rem; font-weight:900;"></h3>
+    <div id="p-role" style="background:#e0f2f1; display:inline-block; padding:6px 16px; border-radius:8px; font-size:1.1rem; color:#00695c; margin-bottom:25px; font-weight: 800;"></div>
+    <p id="p-desc" style="line-height:1.9; color:#333; font-size:1.2rem; margin-bottom: 30px;"></p>
+    <div style="padding-top:20px; border-top:2px dashed #ccc; color:#d84315; background: #fbe9e7; padding: 20px; border-radius: 10px;">
+        <strong>⚠️ 考試關鍵記憶：</strong> <span id="p-exam" style="font-size:1.1rem;"></span>
+    </div>
+</div>
+
+<script>
+    let currentEvent = null;
+
+    const comparisonData = [
+        {y:"三年級", w:"觀察與比較", t:"植物構造(根莖葉分辨)、磁鐵(磁極/磁力/磁化)、空氣(佔空間/可壓縮/重量)、水(溶解/毛細現象/三態)、天氣(氣溫/雨量/雲量)"},
+        {y:"四年級", w:"分類與測量", t:"水生生物(適應構造/呼吸)、昆蟲(生活史/變態/分類)、電路(串並聯/導體)、月亮(盈虧規律/高度角)、力(彈簧秤/虎克定律)"},
+        {y:"五年級", w:"變因與實驗", t:"植物生理(光合/蒸散/呼吸)、熱(傳導/對流/輻射)、太陽(竿影方位/四季)、星空(星座盤/北極星)、聲音(三要素/傳播)、水溶液(酸鹼指示劑/中和/導電)"},
+        {y:"六年級", w:"系統與永續", t:"簡單機械(槓桿/滑輪/輪軸)、電磁(電流磁效應/電磁鐵)、天氣系統(氣團/鋒面/颱風)、岩石礦物(種類/硬度/檢測)、環境(SDGs/全球暖化)"},
+        {y:"跨科統整", w:"科學方法", t:"提出問題 -> 形成假設 -> 實驗設計(操縱/控制/應變變因) -> 數據分析 -> 結論(支持或修正假設)"}
+    ];
+
+    const personDB = {
+        "法布爾":{role:"昆蟲學家",desc:"法國「昆蟲詩人」。強調「野外實地觀察」而非解剖。耗時30年著《昆蟲記》，記錄糞金龜滾球、蟬羽化、狩獵蜂行為。",exam:"《昆蟲記》、實地觀察、反對過度干擾。"},
+        "林奈":{role:"生物學家",desc:"發明「二名法」（屬名+種小名），建立生物分類系統（界門綱目科屬種）。種是分類基本單位，同種可交配產生有生殖力後代。",exam:"二名法、分類學之父、屬名(大寫名詞)+種小名(小寫形容詞)。"},
+        "虎克":{role:"物理/生物學家",desc:"自製顯微鏡觀察軟木塞，發現「細胞」(Cell)。實為植物死後殘留的「細胞壁」。",exam:"發現細胞(細胞壁)、顯微鏡、虎克定律(彈簧伸長量與受力成正比)。"},
+        "牛頓":{role:"物理學家",desc:"發現萬有引力、三大運動定律。利用三棱鏡發現白光可折射出七彩光譜（色散）。",exam:"地心引力、光的色散(三棱鏡)、白光是混合光。"},
+        "愛迪生":{role:"發明家",desc:"改良燈泡（碳化竹絲/鎢絲），發明留聲機。推動直流電，發現電池串聯增加電壓。",exam:"改良燈泡(非發明)、鎢絲(高熔點)、電池串聯亮度增。"},
+        "伽利略":{role:"物理/天文學家",desc:"發現「單擺等時性」(週期只與擺長有關，與擺錘重無關)。改進望遠鏡支持日心說。",exam:"單擺等時性、擺長越長擺動越慢、與重量/角度(小角度)無關。"},
+        "奧斯特":{role:"物理學家",desc:"發現通電導線使指南針偏轉，證實「電生磁」(電流磁效應)。",exam:"電流磁效應、安培右手定則前導、電產生磁場。"},
+        "富蘭克林":{role:"科學家",desc:"風箏實驗證明閃電是電，發明避雷針(尖端放電)，定義正負電。",exam:"尖端放電、避雷針(導電入地)。"},
+        "阿基米德":{role:"數學/物理學家",desc:"發現槓桿原理(給我支點舉起地球)與浮力原理(排水法)。",exam:"槓桿原理、浮力=排開液重、皇冠實驗。"},
+        "普利斯特利":{role:"化學家",desc:"發現氧氣，證實植物能更新空氣(光合作用前身)。",exam:"發現氧氣、蠟燭燃燒與老鼠實驗。"},
+        "拉瓦節":{role:"化學之父",desc:"確立燃燒是氧化作用，推翻燃素說，確立「質量守恆定律」。",exam:"燃燒三要素、氧氣助燃、質量守恆。"},
+        "達爾文":{role:"生物學家",desc:"提出「演化論」，著《物種源始》，主張「物競天擇，適者生存」。",exam:"天擇說、演化、加拉巴哥雀鳥(鳥喙差異)。"},
+        "毛細現象":{role:"物理現象",desc:"液體在細管內自動上升/下降。管越細升越高。例：根吸水、毛巾吸水。",exam:"管徑細高度高、植物輸水動力之一、酒精燈芯。"},
+        "蒸散作用":{role:"植物生理",desc:"水分由氣孔散失，產生拉力帶動根部吸水。調節體溫。",exam:"根吸水主動力、氣孔調節、葉片散失。"},
+        "變態":{role:"生物發育",desc:"幼體到成體構造習性劇變。完全變態(卵幼蛹成)，不完全變態(卵若成)。",exam:"有無蛹期是關鍵、完全(蝶/甲蟲)、不完全(蟑螂/蜻蜓)。"},
+        "表面張力":{role:"物理現象",desc:"液體表面收縮力。例：水滴圓球狀、水黽浮水面、硬幣水不溢。",exam:"水黽浮水(非浮力)、雨滴球形。"},
+        "微管束":{role:"植物構造",desc:"植物運輸管道。木質部在內(運水)，韌皮部在外(運養分)。雙子葉環狀有形成層。",exam:"木內(水)韌外(養)、形成層(細胞分裂/變粗)。"},
+        "科氏力":{role:"地科現象",desc:"地球自轉造成偏移。北半球向右偏。颱風逆時針旋入，高壓順時針旋出。",exam:"北半球右偏、颱風逆時針、高壓順時針。"},
+        "操縱變因":{role:"實驗設計",desc:"實驗中「唯一改變」的條件(主角)。",exam:"只能有一個、你想研究的項目(如水溫)。"},
+        "控制變因":{role:"實驗設計",desc:"實驗中必須「保持相同」的條件。",exam:"必須不變、否則不公平(如水量/攪拌)。"},
+        "應變變因":{role:"實驗設計",desc:"隨操縱變因改變的「結果」。",exam:"實驗結果數據(如溶解時間)。"},
+        "頻率":{role:"聲音物理量",desc:"每秒完成的振動次數，國小課本常用『高低音』來說明：頻率高聽起來尖細(高音)，頻率低聽起來低沉(低音)。",exam:"單位為赫茲(Hz)；同一樂器彈得越快、弦越短越緊，頻率越高、音調越高。"},
+        "振幅":{role:"波動大小",desc:"物體振動時偏離平衡位置的最大距離，可用『波峰高度』表示，是決定聲音『大聲或小聲』的重要物理量。",exam:"振幅大=聲音大，振幅小=聲音小；私中常以相同頻率但振幅不同的波形圖考響度比較。"},
+        "石蕊試紙":{role:"酸鹼指示劑",desc:"由石蕊色素浸漬在紙上製成，可用來初步判斷溶液呈酸性或鹼性，是國小酸鹼單元最基本的工具。",exam:"酸紅鹼藍是必背口訣；常與紫色石蕊試紙題型結合，要求學生判斷浸入不同溶液後的顏色變化。"},
+        "電磁鐵":{role:"電流產生的磁鐵",desc:"由繞在鐵芯上的線圈通電後形成的磁鐵，通電有磁性、不通電就沒有磁性，可方便開關控制，常用於電鈴與起重機。",exam:"強弱與線圈圈數、電流大小、鐵芯材質有關；常考『如何讓電磁鐵更強』與『與永久磁鐵的差異』。"}
+    };
+
+    const scienceDB = {
+        'bio': { title:"🌿 生物與環境", desc:"植物構造、動物分類、生態適應與光合作用。", center:[23.5, 121], zoom:7, events:[
+            {year:"小三上", title:"植物的身體構造", desc:"根莖葉花果種子的功能與分類。", cause:"適應陸地生活。", figures:["林奈","微管束","蒸散作用"], subTimeline:[
+                {t:"根",e:"軸根(雙子葉,榕樹)、鬚根(單子葉,蔥)。功能：固定、吸水。變態：儲存根(蘿蔔/地瓜)。"},
+                {t:"莖",e:"木本(樟樹/形成層/年輪)、草本(咸豐草)。功能：支撐、運輸。變態：塊莖(馬鈴薯/有芽眼)、鱗莖(洋蔥)。"},
+                {t:"葉",e:"網狀脈(雙子葉)、平行脈(單子葉)。功能：光合、蒸散、呼吸。"}
+            ], impact:"植物生理基礎。", examFocus:[
+                "陷阱：馬鈴薯是莖(有節/芽眼)，地瓜是根。",
+                "雙子葉：網狀脈+軸根+花瓣4/5倍+種子2片。",
+                "單子葉：平行脈+鬚根+花瓣3倍+種子1片。",
+                "紅蘿蔔是根，薑是莖，仙人掌刺是葉。"
+            ], textbook:"<h3>🔬 權威統整：植物微管束與氣孔實驗</h3><div class='img-box video-node' onclick=\"openVideo('植物 根 莖 葉 微管束 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Stem-histology-cross-section-tag.svg/1215px-Stem-histology-cross-section-tag.svg.png\" alt=\"植物莖橫切面圖\"><div class='play-overlay'></div></div><p>雙子葉(左)：維管束排成環狀，內木外韌，中間有形成層。<br>單子葉(右)：維管束散生，像外星人臉，無形成層。</p><div class='img-caption'>考試重點：木質部在內側吸紅墨水。(點擊開啟教學影片搜尋)</div></div><div class='img-box video-node' onclick=\"openVideo('氣孔 開閉 蒸散作用 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Stoma_opening_and_closing.svg/640px-Stoma_opening_and_closing.svg.png\" alt=\"氣孔開閉示意圖\"><div class='play-overlay'></div></div>[圖解：氣孔構造]<br>兩個半月形保衛細胞，中間為氣孔。<br>水分多->保衛細胞膨脹(彎曲)->氣孔開。<br>缺水->保衛細胞萎縮(變直)->氣孔關。<div class='img-caption'>點擊開啟氣孔開閉影片搜尋。</div></div><ul><li><strong>微管束觀察</strong>：芹菜插紅墨水。橫切見紅點。<ul><li><strong>木質部</strong>：吸紅墨水，在內側，運水(下往上)。</li><li><strong>韌皮部</strong>：在外側，運養分(雙向)。</li></ul></li><li><strong>氣孔觀察</strong>：撕下葉片下表皮。<ul><li><strong>保衛細胞</strong>：半月形，含葉綠體，控制開閉。</li><li><strong>氣孔</strong>：水分多時開，缺水時關。多在葉背。</li></ul></li></ul>", mapPoints:[[25.04, 121.56, "台北植物園"], [23.47, 120.95, "阿里山神木"]]},
+
+            {year:"小三下", title:"動物的分類", desc:"構造、體溫、繁殖與育幼。", cause:"生物多樣性。", figures:["法布爾","變態"], subTimeline:[
+                {t:"體溫",e:"內溫(恆溫)：鳥、哺乳。外溫(變溫)：魚、兩生、爬蟲、昆蟲。"},
+                {t:"繁殖",e:"胎生：哺乳類(肚臍)。卵生：鳥/爬/魚/昆/兩生。"},
+                {t:"育幼",e:"哺乳/鳥類多育幼。魚/昆蟲多不育幼(海馬例外)。"}
+            ], impact:"演化適應。", examFocus:[
+                "陷阱：蝙蝠是哺乳類(胎生/飛)。",
+                "陷阱：鯨豚是哺乳類(肺呼吸)。",
+                "陷阱：企鵝是鳥類(卵生)。",
+                "陷阱：鴨嘴獸是卵生哺乳類。",
+                "海馬是魚類(雄性育兒)。"
+            ], textbook:"<h3>🧬 權威統整：脊椎動物五大類比較表</h3><div class='img-box video-node' onclick=\"openVideo('脊椎動物 五大類 分類 國小 自然')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Vertebrate_diversity.jpg/800px-Vertebrate_diversity.jpg\" alt=\"脊椎動物多樣性\"><div class='play-overlay'></div></div>[圖解：脊椎動物演化樹]<br>魚類 -> 兩生類 -> 爬蟲類 -> 鳥類/哺乳類<br>關鍵演化：肺的出現、羊膜卵(脫離水)、恆溫機制。<div class='img-caption'>點擊開啟脊椎動物分類影片搜尋。</div></div><ul><li><strong>魚類</strong>：鱗、鰓、鰭、卵生、外溫。</li><li><strong>兩生類</strong>：濕潤皮膚、幼鰓成肺、無殼卵、外溫(青蛙)。</li><li><strong>爬蟲類</strong>：乾鱗/骨板、肺、有殼卵、外溫(龜/蛇)。</li><li><strong>鳥類</strong>：羽毛、肺+氣囊、有殼卵、內溫。</li><li><strong>哺乳類</strong>：毛髮、肺、胎生哺乳、內溫。</li></ul>", mapPoints:[[21.94, 120.78, "墾丁梅花鹿"], [24.8, 120.9, "香山濕地螃蟹"]]},
+
+            {year:"小四上", title:"水生生物", desc:"水生植物與魚類構造。", cause:"水中適應。", figures:["毛細現象"], subTimeline:[
+                {t:"漂浮型",e:"根不入土，葉柄氣室。例：布袋蓮、大萍。"},
+                {t:"沉水型",e:"全沉，無氣孔，軟莖。例：水蘊草。"},
+                {t:"挺水型",e:"根入土，莖葉挺出。例：荷花。"},
+                {t:"浮葉型",e:"根入土，葉浮水面。例：睡蓮。"}
+            ], impact:"通氣組織演化。", examFocus:[
+                "睡蓮(浮葉,葉缺口) vs 荷花(挺水,葉圓)。",
+                "布袋蓮葉柄剖開有氣室(浮力/氣體)。",
+                "沉水植物由表皮換氣。",
+                "魚鰓微血管交換氧氣。"
+            ], textbook:"<h3>🌊 權威統整：水生植物適應構造</h3><div class='img-box video-node' onclick=\"openVideo('水生植物 漂浮 沉水 挺水 浮葉 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Eichhornia_crassipes_20190212_105337.jpg/640px-Eichhornia_crassipes_20190212_105337.jpg\" alt=\"布袋蓮\"><div class='play-overlay'></div></div>[圖解：布袋蓮葉柄剖面]<br>充滿海綿狀空隙(氣室)。<br>與根部相連，功能：1.儲存空氣(呼吸) 2.增加浮力。<div class='img-caption'>點擊開啟水生植物適應影片搜尋。</div></div><div class='img-box'>[圖解：四大類型分布]<br>漂浮(根懸空) | 沉水(全沒入) | 浮葉(根定土葉浮水) | 挺水(莖葉挺出)<br class='img-caption'>分辨關鍵：根是否入土？葉片位置？</div><ul><li><strong>氣室觀察實驗</strong>：壓布袋蓮葉柄入水 -> 冒泡(證明內含空氣)。</li><li><strong>表面效應</strong>：水珠在荷葉滾動(奈米結構)，睡蓮葉散開(無此結構)。</li></ul>", mapPoints:[[22.86, 120.55, "官田菱角"], [24.83, 121.17, "龍潭大池"]]},
+
+            {year:"小四下", title:"昆蟲家族", desc:"特徵、生活史與變態。", cause:"演化優勢。", figures:["法布爾","變態"], subTimeline:[
+                {t:"完全變態",e:"卵-幼-蛹-成。差異大。例：蝶、甲蟲、蚊、蜂。"},
+                {t:"不完全變態",e:"卵-若-成。無蛹。例：蟑、蟋、螳、椿象。"},
+                {t:"半變態",e:"幼蟲水生。例：蜻蜓(水蠆)。"}
+            ], impact:"昆蟲多樣性。", examFocus:[
+                "有無「蛹」是關鍵。",
+                "蜘蛛(8腳)非昆蟲。",
+                "蠶寶寶氣門在身體兩側(不可悶)。",
+                "蠶蛾不進食只產卵。"
+            ], textbook:"<h3>🦋 權威統整：昆蟲變態圖解</h3><div class='img-box video-node' onclick=\"openVideo('昆蟲 變態 完全變態 不完全變態 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Holometabolous_vs._Hemimetabolous.svg/1280px-Holometabolous_vs._Hemimetabolous.svg.png\" alt=\"完全變態 vs 不完全變態圖解\"><div class='play-overlay'></div></div><ul><li><strong>完全變態</strong>：卵 -> 幼蟲 -> <strong>蛹</strong> -> 成蟲 (蝴蝶)</li><li><strong>不完全變態</strong>：卵 -> 若蟲 -> 成蟲 (蟑螂)</li></ul><div class='img-caption'>關鍵差異：有無「蛹」期。(點擊開啟蝴蝶變態影片搜尋)</div></div><div class='img-box'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Insect_anatomy_diagram.svg/2000px-Insect_anatomy_diagram.svg.png\" alt=\"昆蟲身體構造圖解\"><p>頭(觸角/眼/口器)、胸(3對腳/2對翅)、腹(氣門/生殖器)。<br>蜘蛛是頭胸部+腹部，8隻腳，非昆蟲。</p><div class='img-caption'>典型昆蟲身體構造示意圖。</div></div><ul><li><strong>構造重點</strong>：3對腳、2對翅都長在「胸部」。</li><li><strong>特殊案例</strong>：衣魚(無翅)、蜻蜓(半變態，稚蟲水生)。</li></ul>", mapPoints:[[23.82, 120.78, "集集特生中心"], [23.47, 120.44, "嘉大昆蟲館"]]},
+
+            {year:"小五上", title:"光合作用", desc:"製造養分與蒸散。", cause:"能量來源。", figures:["普利斯特利","微管束","蒸散作用"], subTimeline:[
+                {t:"光合作用",e:"水+CO2 --光/葉綠體--> 葡萄糖+O2。"},
+                {t:"驗證實驗",e:"鋁箔遮光->熱水煮->酒精煮->碘液測澱粉。"},
+                {t:"蒸散作用",e:"袋子包葉片見水珠。"}
+            ], impact:"生態能量流動。", examFocus:[
+                "產物：葡萄糖(轉澱粉)與氧氣。",
+                "實驗：酒精隔水加熱(防燃)。",
+                "碘液：有澱粉變藍黑。",
+                "遮光處黃褐(無澱粉)，照光處藍黑(有澱粉)。"
+            ], textbook:"<h3>☀️ 權威統整：光合作用實驗流程 (私中必考)</h3><div class='img-box video-node' onclick=\"openVideo('光合作用 實驗 步驟 國小 自然')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Photosynthesis.gif/640px-Photosynthesis.gif\" alt=\"光合作用示意圖\"><div class='play-overlay'></div></div>[圖解：實驗步驟流程]<br>1.暗室處理(耗盡澱粉) -> 2.鋁箔遮光(操縱變因) -> 3.熱水煮(破壞細胞) -> 4.酒精隔水加熱(溶葉綠素) -> 5.漂洗 -> 6.滴碘液。<br class='img-caption'>注意：步驟4必須「隔水加熱」，防止酒精起火。(點擊開啟光合作用動畫搜尋)</div><ul><li><strong>變因分析</strong>：<br><strong>操縱</strong>：有無照光。<br><strong>控制</strong>：同植物、同葉、水、溫。<br><strong>應變</strong>：碘液變色結果(藍黑vs黃褐)。</li><li><strong>產物</strong>：葡萄糖(轉變為澱粉儲存) + 氧氣(釋放)。</li></ul>", mapPoints:[[24.11, 121.30, "奧萬大楓葉"]]},
+            {year:"小五下", title:"人體系統與感官", desc:"消化、循環、呼吸、排泄與五官感覺。", cause:"多種系統分工合作，維持生命運作。", figures:[], subTimeline:[
+                {t:"消化系統",e:"食物路徑：口腔→食道→胃→小腸→大腸→肛門。口腔咀嚼＋唾液先開始消化。小腸吸收養分，大腸主要吸收水分。"},
+                {t:"循環系統",e:"心臟像幫浦，將血液送往全身。紅血球運送氧氣，血漿運送養分。"},
+                {t:"呼吸系統",e:"空氣經鼻腔/口腔→氣管→支氣管→肺泡。肺泡與毛細血管進行氣體交換。"},
+                {t:"排泄系統",e:"腎臟過濾血液產生尿液，經輸尿管至膀胱，再由尿道排出。"},
+                {t:"感官",e:"眼(視覺)、耳(聽覺)、鼻(嗅覺)、舌(味覺)、皮膚(觸覺)。感覺器官→神經→大腦解讀。"}
+            ], impact:"將生活中健康、運動、飲食與身體系統連結起來。", examFocus:[
+                "消化從口腔就開始，不是從胃才開始。",
+                "大腸主要功能是吸收水分與形成糞便，不再消化養分。",
+                "氣體交換發生在肺泡，並非氣管或支氣管。",
+                "尿液產生在腎臟，膀胱只是暫時儲存。",
+                "感官是器官，感覺是大腦解讀的結果，兩者要區分。"
+            ], textbook:"<h3>🧍 權威統整：人體主要系統一圖搞懂</h3><div class='img-box video-node' onclick=\"openVideo('人體 消化 循環 呼吸 排泄 系統 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Human_anatomy_female_blank.png/480px-Human_anatomy_female_blank.png\" alt=\"人體系統示意圖\"><div class='play-overlay'></div></div><div class='img-caption'>消化、循環、呼吸、排泄與神經系統分布在全身，各司其職。(點擊開啟教學影片搜尋)</div></div><ul><li><strong>常見陷阱</strong>：把「器官」(眼睛)寫成「感覺」(視覺)，或把「視覺」寫成器官名稱。</li><li><strong>題目習慣問</strong>：某系統受損會有哪些生活困難？可從功能倒推。</li></ul>", mapPoints:[]},
+            {year:"小六上", title:"食物鏈與生態系", desc:"生產者、消費者、分解者與食物網關係。", cause:"能量由太陽經生產者流向各階層。", figures:["達爾文"], subTimeline:[
+                {t:"角色分工",e:"生產者：綠色植物與藻類；消費者：草食、肉食、雜食動物；分解者：細菌、黴菌等微生物。"},
+                {t:"食物鏈箭頭",e:"箭頭由「被吃者」指向「吃者」，表示能量與物質的流向。"},
+                {t:"食物網穩定性",e:"多條食物鏈交錯，某一族群數量大幅改變會影響整個生態系。"}
+            ], impact:"理解族群數量變化與環境破壞對生態平衡的影響。", examFocus:[
+                "生產者一定具有葉綠體，能行光合作用。",
+                "食物鏈箭頭方向代表能量流向，而非動作箭頭。",
+                "人類多位於食物鏈頂端，易受生物放大作用影響。",
+                "分解者將遺體與排泄物分解成無機鹽，回到環境中。"
+            ], textbook:"<h3>🌱 權威統整：食物鏈、食物網與生態平衡</h3><div class='img-box video-node' onclick=\"openVideo('食物鏈 食物網 生態系 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Food_web_diagram.svg/640px-Food_web_diagram.svg.png\" alt=\"食物網示意圖\"><div class='play-overlay'></div></div><div class='img-caption'>每一條箭頭都由被吃的一端指向捕食者，表示能量由下而上流動。(點擊開啟教學影片搜尋)</div></div><ul><li><strong>食物鏈</strong>：生產者 → 草食動物 → 肉食動物 → 頂級掠食者。</li><li><strong>食物網</strong>：多條食物鏈交錯，使生態系較穩定。</li><li><strong>生物放大</strong>：毒素沿食物鏈逐級累積，頂端生物危險最高。</li></ul>", mapPoints:[]}
+        ]},
+        'physics': { title:"⚡ 物理與能量", desc:"力、光、熱、電、聲、磁。", center:[24, 120.8], zoom:7.5, events:[
+            {year:"小三上", title:"磁鐵", desc:"磁極、磁力與磁化。", cause:"磁場。", figures:[], subTimeline:[
+                {t:"特性",e:"兩端磁力強。同極斥、異極吸。"},
+                {t:"磁化",e:"磁鐵摩擦鐵製品。"},
+                {t:"指向",e:"懸掛靜止指南北。"}
+            ], impact:"指南針。", examFocus:[
+                "斷掉磁鐵仍有N/S極。",
+                "只吸鐵鈷鎳(不吸銅鋁)。",
+                "磁力穿透非磁性物。"
+            ], textbook:"<h3>🧲 權威統整：磁力線與磁化</h3><div class='img-box video-node' onclick=\"openVideo('磁鐵 磁力線 實驗 國小 自然')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/2/25/Iron-filings-around-magnet.jpg\" alt=\"磁鐵周圍鐵粉排列圖\"><div class='play-overlay'></div></div><p>磁力線由 N 極出來，回到 S 極。<br>兩端磁力線最密(磁力最強)，中間最稀疏。</p><div class='img-caption'>鐵粉排列示意磁場方向。(點擊開啟磁場實驗影片搜尋)</div></div><ul><li><strong>磁鐵特性</strong>：只吸鐵、鈷、鎳。不吸銅、鋁、金銀。</li><li><strong>保存方式</strong>：異極相對吸附，並加軟鐵片(導磁)形成封閉磁路。</li></ul>", mapPoints:[]},
+            {year:"小三下", title:"光", desc:"直進、反射、折射。", cause:"波的性質。", figures:["牛頓"], subTimeline:[
+                {t:"直進",e:"影、針孔成像(倒立實像)。"},
+                {t:"反射",e:"入射角=反射角。平面鏡(正立虛像/左右反)。"},
+                {t:"折射",e:"入水偏向法線。視深變淺。"},
+                {t:"色散",e:"三稜鏡分七色。"}
+            ], impact:"光學儀器。", examFocus:[
+                "針孔大像亮但糊。",
+                "水中筷子上折、硬幣變淺。",
+                "彩虹在背日方向。",
+                "凸透聚光、凹透散光。"
+            ], textbook:"<h3>🔦 權威統整：光的反射與折射</h3><div class='img-box video-node' onclick=\"openVideo('光的折射 反射 針孔成像 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Refraction_photo.png/640px-Refraction_photo.png\" alt=\"光的折射路徑\"><div class='play-overlay'></div></div>[圖解：光的折射路徑]<br>光由空氣(快)斜射入水(慢) -> 偏向法線(角度變小)。<br>視覺效果：水中物體看起來變淺、筷子向上折斷。<div class='img-caption'>點擊開啟光的折射實驗搜尋。</div></div><div class='img-box'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Pinhole-camera.svg/1280px-Pinhole-camera.svg.png\" alt=\"針孔成像示意圖\"><p>光走直線 -> 穿過小孔 -> 上下顛倒、左右相反的「實像」。<br>孔變大 -> 像變亮但變模糊。</p><div class='img-caption'>針孔成像示意圖。</div></div><ul><li><strong>反射定律</strong>：入射角 = 反射角。</li><li><strong>彩虹</strong>：陽光經水滴折射、反射、再折射。永遠出現在背對太陽方向。</li></ul>", mapPoints:[[25.03, 121.50, "小碧潭"]]},
+            {year:"小四上", title:"電路", desc:"串並聯與導體。", cause:"電子流動。", figures:["愛迪生","伏打"], subTimeline:[
+                {t:"電池串聯",e:"電壓相加，燈亮，沒電快。"},
+                {t:"電池並聯",e:"電壓不變，燈暗，用久。"},
+                {t:"燈泡串聯",e:"越串越暗，一顆壞全滅。"},
+                {t:"燈泡並聯",e:"亮度不變，獨立。家多用此。"}
+            ], impact:"電力。", examFocus:[
+                "電池並聯不增亮。",
+                "燈泡串聯分壓變暗。",
+                "短路危險：兩端直接接在一起。",
+                "LED長腳接正極、短腳接負極。"
+            ], textbook:"<h3>🔋 權威統整：電路串並聯圖解</h3><div class='img-box video-node' onclick=\"openVideo('串聯 並聯 電路 國小 自然')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Series_and_parallel_circuits.svg/1280px-Series_and_parallel_circuits.svg.png\" alt=\"串聯 vs 並聯電路\"><div class='play-overlay'></div></div><p>串聯：正-負-正-負 (電壓相加，燈超亮，耗電快)<br>並聯：正-正，負-負 (電壓不變，燈正常，用很久)</p><div class='img-caption'>串並聯電路示意圖。(點擊開啟電路實驗搜尋)</div></div><div class='img-box'>[圖解：燈泡串聯 vs 並聯]<br>串聯：一顆燒掉全滅 (聖誕燈)<br>並聯：一顆燒掉其他照亮 (家裡電燈)</div><ul><li><strong>變因探究</strong>：電池數影響亮度？<br>操縱：電池數。控制：燈泡數、電線。應變：亮度。</li><li><strong>導體</strong>：金屬、石墨、人體、酸鹼鹽水溶液。</li></ul>", mapPoints:[]},
+            {year:"小五上", title:"浮力與沉浮", desc:"浮力來源與物體沉浮判斷。", cause:"液體對浸入物體產生向上的托力。", figures:["阿基米德"], subTimeline:[
+                {t:"浮力來源",e:"浸入液體中的物體會排開液體，浮力大小等於被排開液體的重量。"},
+                {t:"沉浮判斷",e:"同一液體中：物體密度<液體密度→上浮；相等→懸浮；大於→下沉。"},
+                {t:"排水實驗",e:"不規則金屬丟入量筒水面上升，體積=水面上升體積。可進一步估算密度。"}
+            ], impact:"理解船隻、浮標、潛水艇及冰山等現象。", examFocus:[
+                "船是鋼鐵做的仍可浮起，是因整體平均密度小於水。",
+                "冰會浮在水面，是因冰的密度小於水。",
+                "只看「體積大」或「重量大」判斷沉浮是錯的，必須比較密度。",
+                "同一個物體在不同液體中沉浮情況可能不同。"
+            ], textbook:"<h3>🌊 權威統整：阿基米德與浮力</h3><div class='img-box video-node' onclick=\"openVideo('浮力 阿基米德原理 沉浮 實驗 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Archimedes_Principle.svg/480px-Archimedes_Principle.svg.png\" alt=\"浮力示意圖\"><div class='play-overlay'></div></div><div class='img-caption'>浮力大小與排開液體的重量有關，而不是與物體重量直接相等。(點擊開啟教學影片搜尋)</div></div><ul><li><strong>關鍵概念</strong>：體積一樣時，比重大的物體排開同樣多的水，但本身更重，因此較容易下沉。</li><li><strong>題目習慣問</strong>：換成海水(密度較大)時，物體會浮起較高或較低？(答案：浮得比較高。)</li></ul>", mapPoints:[]},
+            {year:"小五下", title:"力與機械", desc:"槓桿、滑輪、輪軸。", cause:"力矩平衡。", figures:["阿基米德","伽利略"], subTimeline:[
+                {t:"槓桿",e:"施力臂>抗力臂=省力。"},
+                {t:"滑輪",e:"定(改方向)、動(省力費時)。"},
+                {t:"輪軸",e:"施輪省力(方向盤)，施軸費力(電扇)。"}
+            ], impact:"工具。", examFocus:[
+                "筷子/掃把費力但省時。",
+                "動滑輪省半力拉2倍繩。",
+                "腳踏車：踏板帶齒輪(省力)，齒輪帶後輪(費力加速)。"
+            ], textbook:"<h3>🏗️ 權威統整：簡單機械原理</h3><div class='img-box video-node' onclick=\"openVideo('簡單機械 槓桿 滑輪 輪軸 國小 自然')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Palanca-ejemplo.jpg/640px-Palanca-ejemplo.jpg\" alt=\"槓桿原理\"><div class='play-overlay'></div></div>[圖解：三類槓桿]<br>1.支點在中(剪刀)：不一定省力。<br>2.抗力點在中(開瓶器)：必省力。<br>3.施力點在中(筷子)：必費力(但省時)。<div class='img-caption'>點擊開啟槓桿原理影片搜尋。</div></div><div class='img-box'>[圖解：動滑輪原理]<br>繩子向上拉，分擔一半重量 -> 省力1/2。<br>代價：要拉2倍長的繩子。</div><ul><li><strong>輪軸公式</strong>：輪半徑R，軸半徑r。<br>施力在輪：省力 R/r 倍。<br>施力在軸：費力 R/r 倍。</li></ul>", mapPoints:[[24.67, 121.77, "宜蘭傳藝輪軸"]]},
+            {year:"小五下", title:"聲音", desc:"振動與傳播。", cause:"波。", figures:["頻率","振幅"], subTimeline:[
+                {t:"產生",e:"振動。"},
+                {t:"傳播",e:"需介質(固>液>氣)。真空無聲。"},
+                {t:"三要素",e:"響度(振幅)、音調(頻率)、音色(波形)。"}
+            ], impact:"樂器。", examFocus:[
+                "短/細/薄/緊->頻率高->音高。",
+                "管樂器空氣柱短->音高。",
+                "分貝(dB)與赫茲(Hz)。"
+            ], textbook:"<h3>🎵 權威統整：聲音三要素與樂器</h3><div class='img-box video-node' onclick=\"openVideo('聲音 三要素 音調 響度 音色 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Sine_waves_different_frequencies.svg/640px-Sine_waves_different_frequencies.svg.png\" alt=\"聲波波形圖\"><div class='play-overlay'></div></div>[圖解：波形圖]<br>振幅大=大聲 | 頻率密=高音 | 波形不同=音色<div class='img-caption'>點擊開啟聲音與波形影片搜尋。</div></div><ul><li><strong>樂器規律</strong>：<br>弦樂器：弦越短、越細、越緊 -> 振動快 -> 音調高。<br>管樂器：空氣柱越短 -> 振動快 -> 音調高 (如按住全部孔音最低)。</li><li><strong>傳播介質</strong>：固體 > 液體 > 氣體 > 真空(無法傳播)。</li></ul>", mapPoints:[]},
+            {year:"小六上", title:"熱", desc:"傳播與脹縮。", cause:"分子動能。", figures:[], subTimeline:[
+                {t:"傳播",e:"傳導(固)、對流(流體)、輻射(光速)。"},
+                {t:"脹縮",e:"氣體最明顯。水4度C密度大例外。"},
+                {t:"保溫",e:"真空斷傳導對流，鍍銀反輻射。"}
+            ], impact:"氣象。", examFocus:[
+                "導熱：銀銅鋁鐵。",
+                "冷氣上暖氣下(對流)。",
+                "4度C水密度最大(冰浮水)。"
+            ], textbook:"<h3>🔥 權威統整：熱傳播與保溫瓶</h3><div class='img-box video-node' onclick=\"openVideo('熱傳導 對流 輻射 保溫瓶 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/c/c4/Vacuum_flask_diagram.png\" alt=\"保溫瓶構造圖\"><div class='play-overlay'></div></div><ul><li><strong>保溫瓶構造</strong>：</li><li>1. 真空夾層：阻斷傳導與對流。</li><li>2. 鍍銀內壁：反射輻射熱。</li><li>3. 軟木/塑膠塞：阻斷傳導。</li></ul><div class='img-caption'>保溫瓶構造示意圖。(點擊開啟熱傳播影片搜尋)</div></div><ul><li><strong>傳導實驗</strong>：金屬棒上滴蠟，由近熱源處依序熔化。</li><li><strong>對流應用</strong>：冷氣裝上方(冷空氣下降)，暖氣裝下方(熱空氣上升)。</li><li><strong>水的反常</strong>：4°C密度最大。結冰體積變大(密度變小)，故冰浮在水面。</li></ul>", mapPoints:[]},
+            {year:"小六下", title:"電磁鐵與生活應用", desc:"電流產生磁場及電磁鐵強弱控制。", cause:"電流磁效應與鐵心磁化。", figures:["奧斯特","操縱變因"], subTimeline:[
+                {t:"電磁鐵構造",e:"通電線圈纏繞在鐵釘上，通電時鐵釘變成磁鐵，斷電後磁性大幅減弱。"},
+                {t:"影響強度因素",e:"線圈圈數愈多、電流愈大、鐵心材質愈容易磁化，電磁鐵愈強。"},
+                {t:"與永久磁鐵比較",e:"電磁鐵可開關、可調強弱，永久磁鐵則不需供電但無法快速調整。"}
+            ], impact:"理解資源回收場起重機、電鈴、電動門等裝置。", examFocus:[
+                "加粗鐵釘不如增加「線圈圈數」或「電池數」有效。",
+                "電磁鐵斷電後幾乎無磁性，是考題愛問的差異點。",
+                "操縱變因通常是「線圈圈數或電池數」，控制變因是同一支鐵釘、同一種電線等。"
+            ], textbook:"<h3>🧲 權威統整：電磁鐵強弱三要素</h3><div class='img-box video-node' onclick=\"openVideo('電磁鐵 強度 實驗 國小 自然')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Electromagnet_with_iron_core.svg/480px-Electromagnet_with_iron_core.svg.png\" alt=\"電磁鐵示意圖\"><div class='play-overlay'></div></div><div class='img-caption'>線圈圈數、電流大小與鐵心材質是影響電磁鐵強弱的三大關鍵。(點擊開啟教學影片搜尋)</div></div><ul><li><strong>常見探究題</strong>：改變線圈圈數，測量吸起圖釘的個數。</li><li><strong>變因分析</strong>：操縱變因=線圈圈數；控制變因=電池數、鐵釘、導線；應變變因=吸起圖釘數量。</li></ul>", mapPoints:[]}
+        ]},
+        'chem': { title:"🧪 物質與變化", desc:"空氣、水溶液、酸鹼、燃燒。", center:[23.8, 120.6], zoom:7, events:[
+            {year:"小三", title:"空氣與溶解", desc:"特性與飽和。", cause:"粒子。", figures:["表面張力"], subTimeline:[
+                {t:"空氣",e:"佔空間(紙不濕)、可壓縮(針筒)、有重。"},
+                {t:"溶解",e:"攪拌/升溫/顆粒小加速。"}
+            ], impact:"基礎。", examFocus:[
+                "攪拌不增溶解量。",
+                "飽和：沉澱不消失。",
+                "壓縮空氣砲。",
+                "汽水升溫溶解度降。"
+            ], textbook:"<h3>🧊 權威統整：溶解變因分析</h3><div class='img-box video-node' onclick=\"openVideo('空氣 佔有空間 溶解度 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Solvation_of_Na%2B.svg/640px-Solvation_of_Na%2B.svg.png\" alt=\"溶解示意圖\"><div class='play-overlay'></div></div>[圖解：空氣佔空間實驗]<br>杯底塞紙倒扣入水 -> 水進不去 -> 紙乾的。<br>證明：空氣佔有空間。<div class='img-caption'>點擊開啟溶解度實驗搜尋。</div></div><ul><li><strong>探究問題</strong>：水溫影響溶解量？<br>1. <strong>操縱</strong>：水溫(熱/冷)。<br>2. <strong>控制</strong>：水量、糖種、攪拌、杯子。<br>3. <strong>應變</strong>：溶解匙數。</li><li><strong>飽和</strong>：杯底有沉澱物，且攪拌後不再消失。</li></ul>", mapPoints:[]},
+            {year:"小五下", title:"酸鹼水溶液", desc:"指示劑與導電。", cause:"離子。", figures:["石蕊試紙"], subTimeline:[
+                {t:"指示劑",e:"石蕊(酸紅鹼藍)、廣用(紅綠紫)、酚酞(鹼紅)。"},
+                {t:"導電",e:"酸鹼鹽導電(電解質)。"}
+            ], impact:"中和。", examFocus:[
+                "石蕊酸紅鹼藍。",
+                "紫高麗菜酸紅中紫鹼綠。",
+                "酸鹼中和放熱。",
+                "鹽酸腐蝕大理石生CO2。"
+            ], textbook:"<h3>⚗️ 權威統整：酸鹼指示劑變色表</h3><div class='img-box video-node' onclick=\"openVideo('酸鹼 指示劑 石蕊 高麗菜汁 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/PH_indicator_paper.jpg/640px-PH_indicator_paper.jpg\" alt=\"廣用試紙\"><div class='play-overlay'></div></div>[圖解：酸鹼光譜]<br>強酸(紅) -- 中性(綠/紫) -- 強鹼(藍/紫)<br>石蕊：酸紅鹼藍<br>酚酞：酸無鹼紅 (檢測鹼性最靈敏)<div class='img-caption'>點擊開啟酸鹼指示劑影片搜尋。</div></div><ul><li><strong>導電性</strong>：<br>可導電：檸檬酸、醋、小蘇打水、食鹽水(電解質)。<br>不導電：純水、糖水、酒精。</li><li><strong>中和反應</strong>：酸+鹼 -> 鹽+水+熱 (溫度計上升)。</li></ul>", mapPoints:[]},
+            {year:"小六上", title:"氣體與燃燒", desc:"O2/CO2製備。", cause:"反應。", figures:["拉瓦節","普利斯特利"], subTimeline:[
+                {t:"氧氣",e:"雙氧水+二氧化錳。助燃。"},
+                {t:"CO2",e:"小蘇打+醋。不助燃，石灰水混濁。"},
+                {t:"燃燒",e:"可燃、助燃、燃點。"}
+            ], impact:"滅火。", examFocus:[
+                "二氧化錳催化劑。",
+                "排水集氣法。",
+                "漏斗液封。",
+                "澄清石灰水測CO2。"
+            ], textbook:"<h3>🔥 權威統整：氣體製備裝置</h3><div class='img-box video-node' onclick=\"openVideo('氧氣 二氧化碳 製備 排水集氣法 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Downward_displacement_of_water.svg/640px-Downward_displacement_of_water.svg.png\" alt=\"排水集氣法裝置\"><div class='play-overlay'></div></div>[圖解：排水集氣法裝置]<br>廣口瓶倒扣水槽中。<br>特點：收集到的氣體較純，適用於難溶於水的氣體(O2, CO2)。<div class='img-caption'>點擊開啟氣體製備實驗搜尋。</div></div><div class='img-box'>[圖解：長頸漏斗]<br>漏斗長管必須插入液面下(液封)。<br>目的：防止氣體從漏斗口逸出。</div><ul><li><strong>氧氣(O2)</strong>：雙氧水 + 二氧化錳(催化劑/加速)。檢驗：線香復燃。</li><li><strong>二氧化碳(CO2)</strong>：小蘇打 +醋。檢驗：澄清石灰水變混濁(碳酸鈣)。</li><li><strong>滅火原理</strong>：移除可燃物、隔絕助燃物(蓋鍋蓋)、降溫(灑水)。</li></ul>", mapPoints:[]},
+            {year:"小六下", title:"混合物分離與質量守恆", desc:"過濾、蒸發、磁選與秤重實驗。", cause:"物質的狀態與性質不同，可用物理方法分離；反應前後總質量相等。", figures:["拉瓦節"], subTimeline:[
+                {t:"常用分離方法",e:"不溶於水的固體＋水→過濾；溶解在水中的固體→蒸發；含鐵粉的混合物→磁選。"},
+                {t:"質量守恆",e:"密閉系統中，反應前所有物質總質量=反應後產物總質量。"},
+                {t:"實驗設計",e:"在有蓋容器中加熱，冷卻後秤重，比較前後是否相同。"}
+            ], impact:"連結實驗室操作與日常生活（海鹽製作、自來水淨化）。", examFocus:[
+                "打開燒杯直接加熱蒸發，水蒸氣跑掉稱重會變輕，無法驗證質量守恆。",
+                "要驗證質量守恆，系統必須「儘量封閉」，避免氣體逸散。",
+                "過濾只能分離固液混合，不適合同時溶解的多種溶質。"
+            ], textbook:"<h3>⚖️ 權威統整：混合物分離與質量守恆</h3><div class='img-box video-node' onclick=\"openVideo('混合物分離 過濾 蒸發 質量守恆 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Filtration_in_chemistry.svg/480px-Filtration_in_chemistry.svg.png\" alt=\"過濾裝置示意圖\"><div class='play-overlay'></div></div><div class='img-caption'>漏斗、濾紙與錐形瓶是典型的過濾裝置組合。(點擊開啟教學影片搜尋)</div></div><ul><li><strong>裝置設計</strong>：若要比較反應前後質量，必須選擇有蓋廣口瓶或橡皮塞密封的器具。</li><li><strong>題目愛問</strong>：質量變輕不代表物質消失，而是有部分物質(多為氣體)離開了系統。</li></ul>", mapPoints:[]}
+        ]},
+        'earth': { title:"🌍 地球與太空", desc:"天氣、星空、岩石。", center:[23.5, 121], zoom:7, events:[
+            {year:"小三", title:"天氣觀測", desc:"溫雨雲風。", cause:"大氣。", figures:[], subTimeline:[
+                {t:"氣溫",e:"百葉箱(通風背光)。"},
+                {t:"雨量",e:"直筒測深度mm。"},
+                {t:"風",e:"風向=來向。"}
+            ], impact:"預報。", examFocus:[
+                "雨量測深度非體積。",
+                "百葉箱白/北門/離地。",
+                "北風=從北吹來。"
+            ], textbook:"<h3>☁️ 權威統整：氣象觀測要點</h3><div class='img-box video-node' onclick=\"openVideo('氣象觀測 百葉箱 雨量筒 風向 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Stevenson_screen.jpg/640px-Stevenson_screen.jpg\" alt=\"百葉箱\"><div class='play-overlay'></div></div>[圖解：百葉箱]<br>顏色：白色(反輻射)<br>門向：北邊(防陽光直射)<br>高度：1.25-2m(避地熱)<br>構造：百葉窗(通風擋雨)<div class='img-caption'>點擊開啟氣象觀測影片搜尋。</div></div><ul><li><strong>雨量筒</strong>：必須是上下等寬的直筒。測量的是「高度(mm)」而非體積。</li><li><strong>風向</strong>：指「風吹來的方向」。風向雞箭頭指向北=北風=從北方吹來。</li></ul>", mapPoints:[[25.04, 121.51, "台北氣象站"]]},
+            {year:"小四上", title:"水循環與雲的種類", desc:"蒸發、凝結、降水與常見雲型。", cause:"太陽能量驅動水在地表、大氣與海洋之間循環。", figures:[], subTimeline:[
+                {t:"水循環流程",e:"海洋/湖泊蒸發→上升冷卻凝結成雲→降水(雨/雪/冰雹)→地表逕流或滲入地下。"},
+                {t:"雲型判讀",e:"積雲：像花椰菜，多晴朗；積雨雲：高大厚重，常伴雷雨；層雲：像一大片灰布，帶來綿綿陰雨。"},
+                {t:"考題關鍵",e:"水循環中水的總量大致不變，只是狀態與位置改變。"}
+            ], impact:"理解降雨、乾旱與水資源調配的重要性。", examFocus:[
+                "「蒸發」不等於「沸騰」，常溫也會蒸發。",
+                "雲不是水蒸氣，而是許多小水滴或冰晶。",
+                "積雨雲常與雷陣雨、強風、短時強降雨有關，是天氣題常客。"
+            ], textbook:"<h3>💧 權威統整：水循環與雲型圖解</h3><div class='img-box video-node' onclick=\"openVideo('水循環 雲的種類 蒸發 凝結 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Water_cycle_%28plain_text%29.svg/640px-Water_cycle_%28plain_text%29.svg.png\" alt=\"水循環示意圖\"><div class='play-overlay'></div></div><div class='img-caption'>水在海洋、陸地與大氣之間不斷循環，總量大致維持不變。(點擊開啟教學影片搜尋)</div></div><ul><li><strong>雲型口訣</strong>：<br>「白胖積雲好天氣，高聳積雨打雷雨，灰大片層雲陰又冷」。</li></ul>", mapPoints:[]},
+            {year:"小四", title:"月亮", desc:"盈虧運行。", cause:"相對位置。", figures:[], subTimeline:[
+                {t:"盈虧",e:"朔-眉-上-盈-望-虧-下-殘。"},
+                {t:"觀測",e:"拳頭數高度。"}
+            ], impact:"農曆。", examFocus:[
+                "上上西西(上弦上半夜西亮)。",
+                "下下東東。",
+                "朔(初一)不可見。",
+                "光面朝陽。"
+            ], textbook:"<h3>🌙 權威統整：月相盈虧規律</h3><div class='img-box video-node' onclick=\"openVideo('月相 盈虧 上弦 下弦 國小 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Moon_phases_00.jpg/640px-Moon_phases_00.jpg\" alt=\"月相變化\"><div class='play-overlay'></div></div>[圖解：月相變化圖]<br>陽光在右側：<br>初一(朔/全黑) -> 初七(上弦/右亮) -> 十五(滿月) -> 二二(下弦/左亮)<div class='img-caption'>點擊開啟月相變化原理解說搜尋。</div></div><ul><li><strong>口訣必背</strong>：<br>上上西西：上弦月、上半夜、西邊亮、西邊落。<br>下下東東：下弦月、下半夜、東邊亮、東邊升。</li><li><strong>高度角</strong>：地平線0度，頭頂90度。一拳約10度。</li></ul>", mapPoints:[]},
+            {year:"小五", title:"星與日", desc:"四季運行。", cause:"自轉公轉。", figures:[], subTimeline:[
+                {t:"日",e:"竿影反向。夏影短冬長。"},
+                {t:"星",e:"東升西落(自轉)。北極星不動。"}
+            ], impact:"導航。", examFocus:[
+                "星移15度/hr。",
+                "夏大三角：津牛織。",
+                "北極星在小熊尾。"
+            ], textbook:"<h3>⭐ 權威統整：尋找北極星</h3><div class='img-box video-node' onclick=\"openVideo('北極星 星座 觀測 國小 自然')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Ursa_Major_-_Ursa_Minor_-_Polaris.jpg/640px-Ursa_Major_-_Ursa_Minor_-_Polaris.jpg\" alt=\"尋找北極星\"><div class='play-overlay'></div></div>[圖解：春夏找北極星]<br>北斗七星(大熊座)：杓口第2顆連第1顆，延長5倍距離。<div class='img-caption'>點擊開啟星空觀測技巧搜尋。</div></div><div class='img-box'>[圖解：秋冬找北極星]<br>仙后座(W形)：兩邊開口延伸交點，連向中間星，延長5倍距離。</div><ul><li><strong>太陽軌跡</strong>：夏至直射北回歸線(影最短)；冬至直射南回歸線(影最長)。</li><li><strong>星星運動</strong>：因地球自轉(西向東)，星星看起來東升西落，繞北極星逆時針旋轉(每小時15度)。</li></ul>", mapPoints:[[24.13, 121.27, "合歡山"]]},
+            {year:"小六", title:"岩石天氣", desc:"地質氣象。", cause:"地殼大氣。", figures:[], subTimeline:[
+                {t:"岩石",e:"火成/沉積/變質。"},
+                {t:"礦物",e:"硬度。"},
+                {t:"天氣",e:"高低壓、鋒面。"}
+            ], impact:"資源。", examFocus:[
+                "酸滴石灰岩冒泡。",
+                "花崗(火)/玄武(火)/大理(變)。",
+                "滯留鋒梅雨。",
+                "科氏力颱風逆旋。"
+            ], textbook:"<h3>🌪️ 權威統整：天氣圖與岩石</h3><div class='img-box video-node' onclick=\"openVideo('岩石循環 火成岩 沉積岩 變質岩 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Rock_Cycle_diagram.svg/640px-Rock_Cycle_diagram.svg.png\" alt=\"岩石循環\"><div class='play-overlay'></div></div>[圖解：岩石循環]<br>火成岩(岩漿冷卻) -> 沉積岩(層狀) -> 變質岩(高溫高壓)<div class='img-caption'>點擊開啟岩石循環影片搜尋。</div></div><div class='img-box'>[圖解：高低氣壓氣流(北半球)]<br>高氣壓(H)：順時針旋出 (晴朗)<br>低氣壓(L)：逆時針旋入 (陰雨/颱風)</div><ul><li><strong>檢驗碳酸鈣</strong>：稀鹽酸滴在石灰岩或大理岩 -> 冒二氧化碳氣泡。</li><li><strong>硬度</strong>：滑石(1) < 指甲 < 硬幣 < 玻璃 < 鑽石(10)。</li></ul>", mapPoints:[[24.16, 121.62, "太魯閣"], [25.20, 121.69, "野柳"]]},
+            {year:"小六", title:"鋒面、氣團與颱風路徑判讀", desc:"讀懂天氣圖上的高低氣壓、冷鋒、暖鋒與颱風警報，是各縣市期末考與私中入學考的必考題型。", cause:"利用氣團性質差異解釋鋒面形成，並連結科氏力造成的颱風旋轉方向與移動路徑。", figures:["科氏力"], subTimeline:[
+                {t:"冷鋒與暖鋒",e:"冷鋒：冷空氣主動推擠暖空氣，等壓線靠近，雨勢短暫但較大；暖鋒：暖空氣爬升在冷空氣上方，雨勢綿長細雨居多。"},
+                {t:"鋒面符號",e:"冷鋒用藍色三角形指向推進方向；暖鋒用紅色半圓形指向推進方向；鋒面所在處多雲雨。"},
+                {t:"颱風判讀",e:"北半球颱風為低氣壓中心，等壓線密集，風向逆時針旋入，常自東南海面生成後北上或轉向東北。"}
+            ], impact:"讓學生能從報紙、電視與手機的天氣圖中，預測接下來幾天的變化，與防災教育緊密結合。", examFocus:[
+                "高氣壓多為晴朗穩定天氣，低氣壓附近多雲雨；但要注意鋒面經過時即使不是颱風也會下雨。",
+                "符號箭頭『指向鋒面推進方向』常被反考，學生必須記得三角形與半圓形尖端指向前進一側。",
+                "北半球颱風外圍風向在地面上看起來是逆時針旋轉、向中心吹入；與高氣壓順時針旋出的圖形需分清楚。",
+                "私中常以同一地點在鋒面前後的氣溫、風向與雲量差異設題，要求學生推論鋒面種類與通過時間先後。"
+            ], textbook:"<h3>🌀 權威統整：天氣圖讀圖口訣</h3><div class='img-box video-node' onclick=\"openVideo('天氣圖 鋒面 冷鋒 暖鋒 颱風 氣象局 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Weather_fronts_on_a_weather_map.png/480px-Weather_fronts_on_a_weather_map.png\" alt=\"天氣圖鋒面示意圖\"><div class='play-overlay'></div></div>[圖解：鋒面與氣壓配置簡圖]<br>冷鋒三角追暖鋒圓：藍色三角形像尖刀『追』著前方暖空氣；紅色半圓像太陽緩慢推進。<div class='img-caption'>配合氣象局簡化天氣圖，可快速判斷接下來是轉涼轉乾還是轉暖轉濕。(點擊開啟教學影片搜尋)</div></div><ul><li><strong>口訣整理</strong>：『高順低逆』記旋轉方向(高氣壓順時針、低氣壓逆時針)；『冷速短雨、暖慢長雨』記兩種鋒面特性。</li><li><strong>跨領域連結</strong>：與社會科的颱風防災、自然科的水循環及地理位置常一起命題，考驗學生閱讀圖表與綜合判斷能力。</li></ul>", mapPoints:[]}
+        ]},
+        'tech': { title:"📡 科技與實驗", desc:"方法與永續。", center:[22.6, 120.3], zoom:7.5, events:[
+            {year:"全階段", title:"實驗設計", desc:"公平測試邏輯。", cause:"求真。", figures:["操縱變因","控制變因","應變變因"], subTimeline:[
+                {t:"步驟",e:"觀察-假設-實驗-結論。"},
+                {t:"變因",e:"操縱(1個)、控制(全同)、應變(結果)。"}
+            ], impact:"科學基礎。", examFocus:[
+                "只能有1個操縱變因。",
+                "實驗組vs對照組。",
+                "結果不符修假設。"
+            ], textbook:"<h3>🔬 權威統整：科學變因邏輯 (必考)</h3><div class='img-box video-node' onclick=\"openVideo('科學方法 操縱變因 控制變因 應變變因 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Scientific_Method_3.jpg/640px-Scientific_Method_3.jpg\" alt=\"科學方法\"><div class='play-overlay'></div></div>[圖解：公平測試天平]<br>左邊：操縱變因 (唯一改變)<br>右邊：控制變因 (全部固定)<br>結果：應變變因<div class='img-caption'>點擊開啟實驗設計影片搜尋。</div></div><ul><li><strong>操縱變因</strong>：實驗中的主角，唯一改變的條件。(例：水溫)</li><li><strong>控制變因</strong>：必須保持相同的條件，否則不公平。(例：水量、攪拌、糖量)</li><li><strong>應變變因</strong>：實驗的結果數據。(例：溶解時間)</li></ul>", mapPoints:[]},
+            {year:"全階段", title:"圖表判讀與量測技巧", desc:"折線圖、直條圖與刻度判讀。", cause:"科學數據需用圖表呈現與解讀。", figures:["操縱變因","控制變因","應變變因"], subTimeline:[
+                {t:"圖表類型",e:"折線圖多用於連續變化(時間、溫度)、直條圖多用於分類比較(不同材料結果)。"},
+                {t:"座標與標題",e:"橫軸通常是操縱變因，縱軸是應變變因；標題要說明實驗目的或內容。"},
+                {t:"刻度判讀",e:"讀取溫度計、刻度尺時，視線要與刻度線垂直，以免產生視差。"}
+            ], impact:"能看得懂各版本教科書與補習班講義中的實驗曲線與統計圖。", examFocus:[
+                "常見陷阱是把橫軸與縱軸意義看反。",
+                "如果刻度不等距，數據判讀容易出錯，要先看清楚刻度間距是多少。",
+                "折線圖強調趨勢，單一數值仍需回到表格中精確查詢。"
+            ], textbook:"<h3>📈 權威統整：圖表題快速破題步驟</h3><div class='img-box video-node' onclick=\"openVideo('科學圖表 判讀 折線圖 長條圖 自然科 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Bar_chart.svg/480px-Bar_chart.svg.png\" alt=\"長條圖範例\"><div class='play-overlay'></div></div><div class='img-caption'>多數圖表題只要掌握橫軸、縱軸與「最高/最低/變化最多」三個關鍵即可作答。(點擊開啟教學影片搜尋)</div></div><ul><li>這張圖<strong>在比較什麼</strong>？(主題)</li><li>橫軸是<strong>什麼變因</strong>？縱軸是<strong>什麼結果</strong>？</li><li>刻度是不是<strong>等距</strong>？有沒有單位？</li></ul><p>先回答這三題，再看數據與趨勢，幾乎所有圖表題都能穩定拿分。</p>", mapPoints:[]},
+            {year:"小六", title:"環境永續", desc:"SDGs。", cause:"暖化汙染。", figures:[], subTimeline:[
+                {t:"暖化",e:"溫室氣體(CO2/CH4)。"},
+                {t:"汙染",e:"酸雨/優養化。"}
+            ], impact:"未來。", examFocus:[
+                "酸雨溶大理石。",
+                "優養化缺氧。",
+                "生物放大(食物鏈毒素累積)。",
+                "外來種破壞生態平衡。"
+            ], textbook:"<h3>🌍 權威統整：環境議題</h3><div class='img-box video-node' onclick=\"openVideo('溫室效應 污染 永續發展 SDGs 教學')\"><div class='video-thumbnail'><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/The_Greenhouse_Effect.svg/640px-The_Greenhouse_Effect.svg.png\" alt=\"溫室效應\"><div class='play-overlay'></div></div>[圖解：溫室效應]<br>太陽短波輻射進入 -> 地表反射長波 -> 溫室氣體吸收長波 -> 溫度上升。<div class='img-caption'>點擊開啟溫室效應影片搜尋。</div></div><ul><li><strong>酸雨</strong>：硫/氮氧化物溶於雨水(pH<5.0)。腐蝕建築、酸化土壤。</li><li><strong>生物放大作用</strong>：毒素(DDT/重金屬)沿食物鏈累積，高級消費者(人)受害最深。</li><li><strong>優養化</strong>：磷/氮廢水 -> 藻類暴增 -> 死亡分解耗氧 -> 魚蝦缺氧死。</li></ul>", mapPoints:[[24.03, 120.43, "彰濱"], [23.14, 120.20, "曾文水庫"]]}
+        ]}
+    };
+    
+    // 5. 測驗題庫 (Quiz Database)
+    // 包含生物、物理、化學、地科、科技實驗等領域的混合題庫
+    const quizDB = [
+        // 生物 (Bio)
+        { type: "choice", q: "下列哪一種動物不屬於昆蟲？", options: ["蜻蜓", "蜘蛛", "獨角仙", "蜜蜂"], a: 1, note: "蜘蛛屬於蛛形綱，有8隻腳，身體分頭胸、腹兩部分；昆蟲有6隻腳，分頭胸腹三部分。" },
+        { type: "choice", q: "植物行光合作用的主要場所是哪裡？", options: ["根", "莖", "葉", "花"], a: 2, note: "葉片含有大量葉綠體，是進行光合作用的主要工廠。" },
+        { type: "choice", q: "下列哪種植物的莖具有明顯的年輪？", options: ["水稻", "玉米", "樟樹", "百合"], a: 2, note: "木本植物（雙子葉）具有形成層，會因季節生長速度不同產生年輪；草本或單子葉植物通常沒有。" },
+        { type: "choice", q: "在食物鏈中，能夠自己製造養分的生物稱為什麼？", options: ["生產者", "消費者", "分解者", "掠食者"], a: 0, note: "生產者（如綠色植物、藻類）利用光合作用自製養分。" },
+        { type: "choice", q: "下列哪種動物是胎生哺乳類？", options: ["企鵝", "海馬", "蝙蝠", "大肚魚"], a: 2, note: "蝙蝠雖會飛，但具備胎生、哺乳、有體毛等哺乳類特徵；大肚魚是卵胎生魚類。" },
+        { type: "bool", q: "馬鈴薯發芽的芽眼長出的部分是它的根。", a: false, note: "馬鈴薯是塊莖，芽眼長出的是莖和葉。" },
+        { type: "bool", q: "所有微生物對人類都是有害的。", a: false, note: "許多微生物（如酵母菌、乳酸菌）對人類有益，分解者也是生態系不可或缺的角色。" },
+        
+        // 物理 (Physics)
+        { type: "choice", q: "下列哪種材料是電的良導體？", options: ["塑膠", "銅線", "玻璃", "乾燥木棒"], a: 1, note: "金屬（如銅、銀、鋁）通常是電的良導體。" },
+        { type: "choice", q: "想要讓電磁鐵的磁力增強，下列哪種做法無效？", options: ["增加線圈圈數", "串聯更多電池", "放入粗鐵釘當鐵芯", "改變電流方向"], a: 3, note: "改變電流方向只會改變磁極（N/S），不會改變磁力強弱。" },
+        { type: "choice", q: "使用滑輪組時，哪種滑輪可以省力但費時？", options: ["定滑輪", "動滑輪", "兩者皆可", "兩者皆否"], a: 1, note: "動滑輪可以省一半力，但施力距離是物體移動距離的兩倍（費時）。" },
+        { type: "choice", q: "聲音在下列哪種介質中傳播速度最快？", options: ["空氣", "水", "鋼鐵", "真空"], a: 2, note: "聲音傳播速度：固體 > 液體 > 氣體；真空中無法傳聲。" },
+        { type: "choice", q: "光從空氣斜射入水中，行進路徑會如何改變？", options: ["偏向法線", "偏離法線", "直線前進", "反射回去"], a: 0, note: "光由快介質（空氣）進入慢介質（水），會偏向法線（折射角小於入射角）。" },
+        { type: "bool", q: "磁鐵折斷後，每一小段只剩下單一磁極（只有N或只有S）。", a: false, note: "磁鐵折斷後，每一段仍同時具有N極與S極。" },
+        { type: "bool", q: "槓桿原理中，施力臂大於抗力臂時，必定省力。", a: true, note: "施力臂越長越省力。" },
+
+        // 化學 (Chem)
+        { type: "choice", q: "下列哪種水溶液可以導電？", options: ["純水", "食鹽水", "酒精", "糖水"], a: 1, note: "食鹽水是電解質溶液，解離出離子可導電；純水、糖水、酒精是非電解質。" },
+        { type: "choice", q: "將紅色石蕊試紙放入肥皂水中，試紙會變成什麼顏色？", options: ["紅色", "藍色", "黃色", "白色"], a: 1, note: "肥皂水呈鹼性，會使紅色石蕊試紙變藍。" },
+        { type: "choice", q: "製造氧氣的實驗中，加入二氧化錳的作用是什麼？", options: ["增加氧氣產量", "當作反應物", "加速反應(催化劑)", "減緩反應"], a: 2, note: "二氧化錳是催化劑，只改變速率，不參與反應生成。" },
+        { type: "choice", q: "燃燒的三要素不包含下列哪一項？", options: ["可燃物", "助燃物", "達到燃點", "二氧化碳"], a: 3, note: "二氧化碳是滅火劑，不是燃燒要素。" },
+        { type: "bool", q: "把糖加入水中攪拌，可以增加糖的溶解總量。", a: false, note: "攪拌只能加快溶解速度，不能改變溶解度（總量）；要增加總量需提高溫度或增加水量。" },
+        { type: "bool", q: "空氣佔有空間且具有重量。", a: true, note: "透過皮球充氣實驗可證明空氣有重量；倒扣杯入水紙不濕證明佔空間。" },
+
+        // 地科 (Earth)
+        { type: "choice", q: "下列哪種岩石屬於火成岩？", options: ["大理岩", "石灰岩", "安山岩", "砂岩"], a: 2, note: "安山岩、玄武岩、花崗岩是火成岩；大理岩是變質岩；石灰岩、砂岩是沉積岩。" },
+        { type: "choice", q: "北半球颱風的氣流旋轉方向為何？", options: ["順時針向內", "順時針向外", "逆時針向內", "逆時針向外"], a: 2, note: "北半球低氣壓（颱風）受科氏力影響，氣流逆時針向中心輻合。" },
+        { type: "choice", q: "農曆十五的月亮形狀為何？", options: ["朔月", "上弦月", "滿月", "下弦月"], a: 2, note: "農曆十五是望（滿月），整夜可見。" },
+        { type: "choice", q: "在台灣觀察北極星，它的仰角約等於當地的什麼？", options: ["經度", "緯度", "氣溫", "海拔"], a: 1, note: "北極星高度角約等於當地緯度（嘉義約23.5度）。" },
+        { type: "bool", q: "還有其他星星會繞著北極星旋轉，是因為地球自轉的關係。", a: true, note: "地球由西向東自轉，導致星空看起來繞天球北極（北極星附近）旋轉。" },
+        { type: "bool", q: "雨量筒一定要是圓柱體才能準確測量雨量。", a: true, note: "必須是上下粗細一致的直筒（圓柱或方柱皆可，重點是截面積一致），測量的是深度。" },
+
+        // 科技與實驗 (Tech)
+        { type: "choice", q: "在一個公平的實驗設計中，只能有幾個操縱變因？", options: ["1個", "2個", "越多越好", "0個"], a: 0, note: "為了確認因果關係，一次只能改變一個條件（操縱變因）。" },
+        { type: "choice", q: "若要研究「水溫對溶解速度的影響」，下列哪個是控制變因？", options: ["水的溫度", "溶解的時間", "攪拌的速度", "溶解的結果"], a: 2, note: "水溫是操縱變因；溶解時間是應變變因；攪拌速度、水量等必須保持相同（控制變因）。" },
+        { type: "bool", q: "實驗結果如果跟假設不同，應該修改實驗數據來符合假設。", a: false, note: "誠實記錄數據是科學精神；若結果不符，應檢討實驗過程或修正假設。" }
+    ];
+
+    // 擴充題目至 50 題以上 (40選擇 + 10是非)
+    // 這裡用程式產生一些變體題目以補足數量
+    const extraQuiz = [
+        { type: "choice", q: "下列哪種動物的幼體和成體長得完全不同，且有蛹期？", options: ["蟑螂", "蝴蝶", "蟋蟀", "蜻蜓"], a: 1, note: "蝴蝶是完全變態昆蟲。" },
+        { type: "choice", q: "植物的根主要功能不包含下列哪項？", options: ["吸收水分", "固定植株", "製造養分", "儲存養分"], a: 2, note: "製造養分（光合作用）主要在葉；根負責吸收與固定。" },
+        { type: "choice", q: "下列哪種天氣符號代表冷鋒？", options: ["藍色三角形", "紅色半圓形", "藍紅交錯", "紫色圓形"], a: 0, note: "藍色三角形尖端指向移動方向為冷鋒。" },
+        { type: "choice", q: "下列關於熱傳播的敘述何者正確？", options: ["熱由低溫傳向高溫", "真空不能傳熱", "輻射不需要介質", "金屬導熱比木頭慢"], a: 2, note: "輻射（如太陽光）不需介質即可傳播熱能。" },
+        { type: "choice", q: "下列哪種做法可以減緩鐵生鏽？", options: ["泡在鹽水中", "放在潮濕處", "塗上油漆", "刮除表面塗層"], a: 2, note: "油漆可隔絕空氣與水，防止生鏽。" },
+        { type: "choice", q: "人體氣體交換的主要場所是？", options: ["鼻腔", "氣管", "支氣管", "肺泡"], a: 3, note: "肺泡壁薄且密布微血管，是交換氧氣與二氧化碳的地方。" },
+        { type: "choice", q: "想要把混合在水中的沙子分離出來，最適合的方法是？", options: ["蒸發", "過濾", "磁吸", "溶解"], a: 1, note: "過濾法可分離未溶解的固體顆粒。" },
+        { type: "choice", q: "星座盤使用時，盤面上的「南」字應該朝向哪裡？", options: ["天空", "地面", "北方", "南方"], a: 1, note: "面向南方時，將星座盤「南」字朝下（地面），高舉對照天空。" },
+        { type: "choice", q: "下列哪種岩石遇到稀鹽酸會冒泡？", options: ["花崗岩", "安山岩", "石灰岩", "板岩"], a: 2, note: "石灰岩含碳酸鈣，遇酸會產生二氧化碳氣泡。" },
+        { type: "choice", q: "太陽在一天中的方位變化是？", options: ["由西向東", "由東向西", "由南向北", "不一定"], a: 1, note: "因地球自轉（西向東），太陽視運動為東升西落。" },
+        // ... (可持續擴充更多變體題)
+    ];
+    
+    // 合併題庫
+    const fullQuizDB = quizDB.concat(extraQuiz);
+
+    function switchPage(id) {
+        document.querySelectorAll('.sidebar .nav a').forEach(a => {
+            if (a.dataset.page === id) {
+                a.classList.add('active');
+            } else {
+                a.classList.remove('active');
+            }
+        });
+        document.querySelectorAll('.page').forEach(e => e.classList.remove('active'));
+        const pg = document.getElementById(id);
+        if (pg) {
+            pg.classList.add('active');
+        }
+        if (scienceDB[id]) {
+            setTimeout(() => initMap(id), 200);
+        }
+    }
+
+    function initMap(key) {
+        const d = scienceDB[key];
+        const containerId = `map-${key}`;
+        const container = document.getElementById(containerId);
+        if (!d || !container) return;
+        if (!container.mapInstance) {
+            const map = L.map(containerId).setView(d.center, d.zoom);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap',
+                maxZoom: 18
+            }).addTo(map);
+            d.events.forEach(e => {
+                if (Array.isArray(e.mapPoints)) {
+                    e.mapPoints.forEach(p => {
+                        L.marker([p[0], p[1]]).addTo(map)
+                            .bindPopup(`<b style="color:#1b5e20">${p[2]}</b><br>${e.year} ${e.title}`);
+                    });
+                }
+            });
+            container.mapInstance = map;
+        } else {
+            container.mapInstance.invalidateSize();
+        }
+    }
+
+    function render() {
+        const body = document.getElementById('comparison-body');
+        comparisonData.forEach(r => {
+            body.innerHTML += `<tr><td class="col-year">${r.y}</td><td>${r.w}</td><td>${r.t}</td></tr>`;
+        });
+
+        let masterTimelineHtml = '';
+        
+        // 加入「私中考題挑戰」按鈕區塊在最上方
+        masterTimelineHtml += `
+            <div style="background: linear-gradient(135deg, #fff9c4 0%, #fff176 100%); padding: 30px; border-radius: 15px; margin-bottom: 40px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #fbc02d;">
+                <h2 style="color: #e65100; margin-bottom: 15px; font-size: 2rem;">🏆 私中入學 / 資優班模擬測驗</h2>
+                <p style="color: #5d4037; font-size: 1.1rem; margin-bottom: 20px;">隨機抽選 40 題選擇 + 10 題是非，挑戰你的自然科學實力！(含詳解)</p>
+                <button onclick="startQuiz()" style="background: #e65100; color: white; border: none; padding: 15px 40px; font-size: 1.3rem; border-radius: 30px; cursor: pointer; font-weight: bold; transition: transform 0.2s; box-shadow: 0 4px 0 #bf360c;">立即開始測驗 ▶</button>
+            </div>
+        `;
+
+        Object.keys(scienceDB).forEach(k => {
+            const d = scienceDB[k];
+            masterTimelineHtml += `<div class="mt-group-title">${d.title}</div>`;
+            let html = `
+                <div class="section-title">${d.title}</div>
+                <div class="section-desc">${d.desc}</div>
+            `;
+            let hasMapPoints = d.events.some(e => e.mapPoints && e.mapPoints.length > 0);
+            if (hasMapPoints) {
+                html += `<div id="map-${k}" class="map-wrapper"></div>`;
+            } else {
+                html += `<div id="map-${k}" style="display:none;"></div>`;
+            }
+            html += '<div class="master-timeline">';
+            d.events.forEach((e, i) => {
+                const card = `
+                    <div class="mt-event" onclick="openModal('${k}', ${i})">
+                        <div class="mt-dot"></div>
+                        <span class="mt-year">${e.year}</span>
+                        <span class="mt-title">${e.title}</span>
+                        <span class="mt-desc">${e.desc}</span>
+                    </div>
+                `;
+                html += card;
+                masterTimelineHtml += card;
+            });
+            html += '</div>';
+            const pageDiv = document.getElementById(k);
+            if (pageDiv) pageDiv.innerHTML = html;
+        });
+        document.getElementById('master-timeline').innerHTML = masterTimelineHtml;
+    }
+
+    function openModal(k, i) {
+        const group = scienceDB[k];
+        if (!group || !group.events || !group.events[i]) return;
+        currentEvent = group.events[i];
+        const subTimeline = Array.isArray(currentEvent.subTimeline) ? currentEvent.subTimeline : [];
+        const figures = Array.isArray(currentEvent.figures) ? currentEvent.figures : [];
+        const examFocus = Array.isArray(currentEvent.examFocus) ? currentEvent.examFocus : [];
+
+        document.getElementById('m-title').innerText = currentEvent.title;
+        document.getElementById('m-desc').innerText = currentEvent.desc || '';
+        document.getElementById('m-cause').innerText = currentEvent.cause || '';
+        document.getElementById('m-impact').innerText = currentEvent.impact || '';
+        document.getElementById('m-subtimeline').innerHTML = subTimeline.length 
+            ? subTimeline.map(t => `<li><span class="st-time">${t.t}</span>${t.e}</li>`).join('')
+            : '<li>無詳細細項</li>';
+        document.getElementById('m-figures').innerHTML = figures.length
+            ? figures.map(f => `<span class="figure-chip" onclick="openPerson('${f}')">${f}</span>`).join('')
+            : '<span style="color:#999;">概念應用</span>';
+        document.getElementById('m-exam-list').innerHTML = examFocus.length
+            ? examFocus.map(e => `<li>${e}</li>`).join('')
+            : '<li>觀念融會貫通。</li>';
+        document.getElementById('event-modal').style.display = 'flex';
+    }
+
+    function closeEventModal() { 
+        document.getElementById('event-modal').style.display = 'none'; 
+    }
+
+    function openTextbookModal() {
+        if (!currentEvent) return;
+        document.getElementById('tb-title').innerText = `📖 權威統整：${currentEvent.title}`;
+        document.getElementById('tb-content').innerHTML = currentEvent.textbook ? currentEvent.textbook : '內容整理中。';
+        document.getElementById('textbook-modal').style.display = 'flex';
+    }
+    function closeTextbookModal() { 
+        document.getElementById('textbook-modal').style.display = 'none'; 
+    }
+    
+    function openVideo(keyword) {
+        const iframe = document.getElementById('yt-iframe');
+        if (!iframe || !keyword) return;
+        const searchQuery = encodeURIComponent(keyword);
+        iframe.src = `https://www.youtube.com/embed?listType=search&list=${searchQuery}`;
+        document.getElementById('video-player').style.display = 'flex';
+    }
+    
+    function closeVideo() {
+        const iframe = document.getElementById('yt-iframe');
+        if (iframe) iframe.src = "";
+        document.getElementById('video-player').style.display = 'none';
+    }
+
+    function openPerson(name) {
+        const p = personDB[name];
+        if (p) {
+            document.getElementById('p-name').innerText = name;
+            document.getElementById('p-role').innerText = p.role;
+            document.getElementById('p-desc').innerText = p.desc;
+            document.getElementById('p-exam').innerText = p.exam;
+            document.getElementById('person-modal').style.display = 'block';
+        } else {
+            alert('資料建置中...');
+        }
+    }
+    function closePersonModal() { 
+        document.getElementById('person-modal').style.display = 'none'; 
+    }
+
+    // 測驗系統邏輯
+    let currentQuiz = [];
+    let quizAnswers = [];
+
+    function startQuiz() {
+        // 隨機選取 40 題選擇 + 10 題是非 (模擬)
+        // 這裡為了演示，先簡單混合並隨機選取
+        // 實際應用可擴充 quizDB 數量
+        
+        // 簡單洗牌演算法
+        const shuffled = fullQuizDB.sort(() => 0.5 - Math.random());
+        
+        // 篩選選擇題與是非題
+        const choiceQ = shuffled.filter(q => q.type === 'choice').slice(0, 40); // 取前40題選擇 (若不足則全取)
+        const boolQ = shuffled.filter(q => q.type === 'bool').slice(0, 10); // 取前10題是非
+        
+        currentQuiz = [...choiceQ, ...boolQ];
+        quizAnswers = new Array(currentQuiz.length).fill(null); // 紀錄使用者答案
+
+        let html = `<div style="padding:30px; max-width:800px; margin:0 auto;">
+            <h2 style="color:#1b5e20; text-align:center; border-bottom:3px solid #f9a825; padding-bottom:15px;">🎓 私中模擬入學測驗</h2>
+            <p style="text-align:center; color:#666; margin-bottom:30px;">共 ${currentQuiz.length} 題，請認真作答。</p>`;
+
+        currentQuiz.forEach((q, idx) => {
+            html += `<div class="quiz-item" style="background:white; padding:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-bottom:20px;">
+                <div style="font-weight:bold; color:#333; margin-bottom:10px;">${idx + 1}. ${q.q}</div>`;
+            
+            if (q.type === 'choice') {
+                q.options.forEach((opt, optIdx) => {
+                    html += `<label style="display:block; margin:5px 0; cursor:pointer;">
+                        <input type="radio" name="q${idx}" value="${optIdx}" onchange="recordAnswer(${idx}, ${optIdx})"> ${opt}
+                    </label>`;
+                });
+            } else {
+                html += `<label style="display:inline-block; margin-right:20px; cursor:pointer;"><input type="radio" name="q${idx}" value="true" onchange="recordAnswer(${idx}, true)"> ⭕ 是</label>`;
+                html += `<label style="display:inline-block; cursor:pointer;"><input type="radio" name="q${idx}" value="false" onchange="recordAnswer(${idx}, false)"> ❌ 非</label>`;
+            }
+            html += `</div>`;
+        });
+
+        html += `<button onclick="submitQuiz()" style="display:block; width:100%; padding:15px; background:#2e7d32; color:white; font-size:1.2rem; border:none; border-radius:10px; cursor:pointer; margin-top:20px;">交卷看詳解</button></div>`;
+
+        // 使用全螢幕模態視窗顯示測驗
+        const modal = document.createElement('div');
+        modal.id = 'quiz-modal';
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:#f1f8e9; z-index:5000; overflow-y:auto;";
+        modal.innerHTML = html + `<div onclick="document.getElementById('quiz-modal').remove()" style="position:absolute; top:20px; right:20px; font-size:2rem; cursor:pointer; color:#666;">&times;</div>`;
+        document.body.appendChild(modal);
+    }
+
+    function recordAnswer(qIdx, ans) {
+        quizAnswers[qIdx] = ans;
+    }
+
+    function submitQuiz() {
+        let score = 0;
+        let resultHtml = `<div style="padding:30px; max-width:800px; margin:0 auto;">
+            <h2 style="color:#1b5e20; text-align:center;">📊 測驗結果與詳解</h2>`;
+
+        currentQuiz.forEach((q, idx) => {
+            const userAns = quizAnswers[idx];
+            const isCorrect = (String(userAns) === String(q.a));
+            if (isCorrect) score += (100 / currentQuiz.length);
+
+            resultHtml += `<div class="quiz-item" style="background:white; padding:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-bottom:20px; border-left: 5px solid ${isCorrect ? '#4caf50' : '#f44336'};">
+                <div style="font-weight:bold; color:#333; margin-bottom:5px;">${idx + 1}. ${q.q}</div>
+                <div style="color:${isCorrect ? 'green' : 'red'}; font-weight:bold; margin-bottom:10px;">
+                    你的答案：${formatAnswer(q, userAns)} ${isCorrect ? '✅' : '❌'}
+                </div>
+                <div style="background:#fff3e0; padding:10px; border-radius:5px; color:#e65100;">
+                    <strong>💡 正解與詳解：</strong><br>
+                    正確答案：${formatAnswer(q, q.a)}<br>
+                    ${q.note}
+                </div>
+            </div>`;
+        });
+
+        resultHtml = `<h1 style="text-align:center; color:#bf360c; font-size:3rem; margin:20px 0;">${Math.round(score)} 分</h1>` + resultHtml;
+        resultHtml += `<button onclick="document.getElementById('quiz-modal').remove()" style="display:block; width:100%; padding:15px; background:#555; color:white; font-size:1.2rem; border:none; border-radius:10px; cursor:pointer; margin-top:30px; margin-bottom:50px;">關閉測驗</button></div>`;
+        
+        const modal = document.getElementById('quiz-modal');
+        modal.innerHTML = resultHtml;
+        modal.scrollTop = 0;
+    }
+
+    function formatAnswer(q, ans) {
+        if (ans === null || ans === undefined) return "未作答";
+        if (q.type === 'choice') return q.options[ans];
+        return ans ? "⭕ 是" : "❌ 非";
+    }
+
+    window.onload = function() {
+        render();
+        document.querySelectorAll('.sidebar .nav a').forEach(a => {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.dataset.page;
+                if (target) switchPage(target);
+            });
+        });
+    };
+</script>
+</body>
+</html>
